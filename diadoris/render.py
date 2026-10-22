@@ -191,7 +191,10 @@ class Renderer:
         if slide.kind=='video':
             from .video import VideoReader
             key=(slide.id,self.size,self.fps)
-            if key not in self.readers:self.readers[key]=VideoReader(self.project.resource(slide.resource),self.size,self.fps,slide.fit)
+            if key not in self.readers:
+                # Video boundaries are cuts: exactly one decoder is needed, even in long shows.
+                self.close()
+                self.readers[key]=VideoReader(self.project.resource(slide.resource),self.size,self.fps,slide.fit)
             pair=self.readers[key].get(slide.source_in+max(0,min(time,slide.duration-1e-6)))
             alpha=envelope(time,0,slide.duration,slide.video_fade_in,slide.video_fade_out)
             if alpha<1:

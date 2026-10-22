@@ -128,7 +128,12 @@ class ExportTests(unittest.TestCase):
             p=Project(width=160,height=90,start_fade=0,end_fade=0);r=p.add_resource(source,'video',layout='full_sbs');r.info=inspect_video(source)
             clip=Slide(kind='video',resource=r.id,source_in=.5,duration=1,transition='fade');p.slides=[Slide(kind='black',duration=.2),clip,Slide(kind='black',duration=.2)]
             self.assertEqual(p.transition_lengths(),[0,0])
-            renderer=Renderer(p);left,right=renderer.frame(.7);renderer.close()
+            renderer=Renderer(p);left,right=renderer.frame(.7)
+            first_reader=next(iter(renderer.readers.values()))
+            second=copy.deepcopy(clip);second.id+='-second';p.slides.append(second)
+            renderer.frame(1.5)
+            self.assertEqual(len(renderer.readers),1);self.assertIsNone(first_reader.process)
+            p.slides.pop();renderer.close()
             self.assertGreater(left.getpixel((50,50))[0],240);self.assertGreater(right.getpixel((50,50))[2],240)
             out=root/'show.mp4';export_project(p,out,ExportSettings(width=160,height=90,quality=True))
             info=self.probe(out);self.assertAlmostEqual(float(info['format']['duration']),1.4,delta=.05)
