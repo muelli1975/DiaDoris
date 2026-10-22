@@ -103,7 +103,7 @@ def export_project(project,destination,settings,cancel=None,progress=lambda p:No
         if has_audio:args+=['-map','1:a:0']
         if settings.target=='bd3d':
             args+=['-c:v','ffv1','-level','3','-pix_fmt',pixel,'-color_range','pc','-color_trc','iec61966-2-1',
-                   '-color_primaries','bt709','-colorspace','gbr','-c:a','pcm_s24le']
+                   '-color_primaries','bt709','-colorspace','rgb','-c:a','pcm_s24le']
         else:
             args+=['-c:v','libx264' if settings.codec=='h264' else 'libx265','-preset','slow','-pix_fmt',pixel,
                    '-crf',str(settings.crf)] if settings.quality else [
@@ -141,8 +141,12 @@ def export_project(project,destination,settings,cancel=None,progress=lambda p:No
                     if cancel.wait(.1):raise Cancelled()
                 errors.seek(0);text=errors.read().decode('utf-8','replace');log.write(text)
                 if p.returncode:raise ValueError(text[-4000:])
-            except BrokenPipeError:
-                errors.seek(0);raise ValueError(errors.read().decode('utf-8','replace')[-4000:])
+            except OSError as error:
+                stop_process(p)
+                if cancel.is_set():raise Cancelled() from error
+                errors.seek(0);detail=errors.read().decode('utf-8','replace')[-4000:];log.write(detail)
+                if detail:raise ValueError(detail) from error
+                raise
             finally:
                 watchdog_done.set();stop_process(p);monitor.join(timeout=2)
                 renderer.close()

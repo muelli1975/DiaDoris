@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+from pathlib import Path
 from PySide6.QtCore import Qt,QRectF,QPointF,Signal,QTimer
 from PySide6.QtGui import QColor,QFont,QPainter,QPen
 from PySide6.QtWidgets import QWidget,QHeaderView,QTableWidget,QAbstractItemView
@@ -31,7 +32,7 @@ QSlider::sub-page:horizontal {background:#9c7c38;}
 QSlider::handle:horizontal {width:13px;margin:-5px 0;background:#c6a95e;border-radius:5px;}
 QCheckBox {spacing:7px;}
 QCheckBox::indicator {width:15px;height:15px;background:#181818;border:1px solid #555;border-radius:3px;}
-QCheckBox::indicator:checked {background:#9c7c38;image:url(none);border:2px solid #c6a95e;}
+QCheckBox::indicator:checked {background:#9c7c38;image:url("__CHECKMARK__");border:1px solid #c6a95e;}
 QCheckBox::indicator:disabled:checked {background:#727272;border-color:#727272;}
 QCheckBox:disabled {color:#727272;}
 QTabWidget::pane {border:1px solid #333333;}
@@ -42,7 +43,7 @@ QGroupBox::title {subcontrol-origin:margin;left:10px;padding:0 5px;}
 QScrollBar:vertical {background:#181818;width:12px;}
 QScrollBar::handle:vertical {background:#444;min-height:24px;border-radius:4px;}
 QLabel[muted="true"] {color:#b8b8b8;}
-'''
+'''.replace('__CHECKMARK__',(Path(__file__).resolve().parents[1]/'assets/check.svg').as_posix())
 
 
 class Preview(QWidget):

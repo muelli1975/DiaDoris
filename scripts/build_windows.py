@@ -17,13 +17,14 @@ def main():
           '--contents-directory','.','--collect-all','pillow_heif','--hidden-import','transcora.core.bd3d_export',
           '--hidden-import','diadoris.video','--add-data',str(ROOT/'presets')+':presets',
           '--add-data',str(ROOT/'reference')+':reference',str(ROOT/'run_diadoris.py')]
+    args[-1:-1]=['--add-data',str(ROOT/'assets')+':assets']
     subprocess.run(args,cwd=ROOT,check=True)
     folder=ROOT/'dist/DiaDoris'
     shutil.copytree(ROOT/'tools',folder/'tools',dirs_exist_ok=True)
     shutil.copytree(ROOT/'examples',folder/'examples',dirs_exist_ok=True)
     for name in ('README.md','README_DE.md','LICENSE','THIRD_PARTY.md'):shutil.copy2(ROOT/name,folder/name)
     source=folder/'source';source.mkdir(exist_ok=True)
-    for name in ('diadoris','transcora','presets','scripts','tests','reference','.github'):
+    for name in ('diadoris','transcora','presets','scripts','tests','reference','assets','.github'):
         shutil.copytree(ROOT/name,source/name,ignore=shutil.ignore_patterns('__pycache__'),dirs_exist_ok=True)
     for name in ('run_diadoris.py','requirements.txt','requirements-build.txt','README.md','README_DE.md','LICENSE','THIRD_PARTY.md'):shutil.copy2(ROOT/name,source/name)
     licenses=folder/'licenses';licenses.mkdir(exist_ok=True)

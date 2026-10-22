@@ -4,7 +4,7 @@ import copy
 import math
 from pathlib import Path
 from PySide6.QtCore import Qt,QRectF,QPointF
-from PySide6.QtGui import QColor,QPainter,QPen,QFont,QKeySequence
+from PySide6.QtGui import QColor,QPainter,QPen,QFont,QKeySequence,QShortcut
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QFormLayout,QSplitter,QListWidget,QPushButton,
                               QPlainTextEdit,QFontComboBox,QCheckBox,QLabel,QComboBox,QFileDialog,QColorDialog,
                               QWidget,QScrollArea,QGridLayout,QMenu,QAbstractItemView,QMessageBox,QSlider)
@@ -161,6 +161,12 @@ class TitleEditor(QDialog):
         self.color=QPushButton();self.color.clicked.connect(self.choose_color);form.addRow(tr('Textfarbe','Text colour'),self.color)
         self.align=combo([('left',tr('Links','Left')),('center',tr('Mitte','Centre')),('right',tr('Rechts','Right'))]);form.addRow(tr('Textausrichtung','Text alignment'),self.align)
         self.scale=number(100,.1,100000,.1,1);self.scale.setSuffix(' %');form.addRow(tr('Grafikgröße','Graphic size'),self.scale)
+        self.graphic_width=number(1,.1,1e8,1,1);self.graphic_height=number(1,.1,1e8,1,1)
+        form.addRow(tr('Grafikbreite (px)','Graphic width (px)'),self.graphic_width);form.addRow(tr('Grafikhöhe (px)','Graphic height (px)'),self.graphic_height)
+        graphic_actions=QHBoxLayout()
+        for text,callback in [(tr('Originalgröße','Original size'),self.original_size),(tr('In Titelbereich einpassen','Fit title area'),self.fit_graphic)]:
+            button=QPushButton(text);button.clicked.connect(callback);graphic_actions.addWidget(button)
+        form.addRow(graphic_actions)
         self.depth=number(0,-1000,1000,.5,2);self.depth.setSuffix(' ‰');self.depth.setToolTip(tr('Minus: vor dem Scheinfenster. Plus: dahinter.','Minus: in front of the screen. Plus: behind it.'));form.addRow(tr('Tiefe','Depth'),self.depth)
         self.depth_slider=QSlider(Qt.Orientation.Horizontal);self.depth_slider.setRange(-5000,5000);self.depth_slider.setSingleStep(50);form.addRow(self.depth_slider)
         self.depth_slider.valueChanged.connect(lambda v:self.depth.setValue(v/100))
@@ -205,15 +211,24 @@ class TitleEditor(QDialog):
         for widget in (self.size,self.scale,self.depth,self.outline,self.opacity,self.offset,self.blur):widget.valueChanged.connect(self.fields_changed)
         for widget in (self.bold,self.italic,self.shadow):widget.toggled.connect(self.fields_changed)
         self.align.currentIndexChanged.connect(self.fields_changed)
+        self.graphic_width.valueChanged.connect(lambda value:self.graphic_dimension(value,0))
+        self.graphic_height.valueChanged.connect(lambda value:self.graphic_dimension(value,1))
         self.bg.currentIndexChanged.connect(self.background_changed);self.fit.currentIndexChanged.connect(self.background_changed)
         self.crop_x.valueChanged.connect(self.background_changed);self.crop_y.valueChanged.connect(self.background_changed)
         self.gradient.currentIndexChanged.connect(self.gradient_changed)
         self.safe.toggled.connect(self.refresh);self.grid.currentIndexChanged.connect(self.refresh);self.reference.currentIndexChanged.connect(self.refresh)
         self.reload_elements();self.refresh()
+        self.help_shortcut=QShortcut(QKeySequence('F1'),self);self.help_shortcut.activated.connect(self.help)
     def begin_gesture(self):self.remember();self.gesture=True
     def end_gesture(self):self.gesture=False
     def sync_depth_slider(self,value):
         self.depth_slider.blockSignals(True);self.depth_slider.setValue(round(max(-50,min(50,value))*100));self.depth_slider.blockSignals(False)
+    def graphic_dimension(self,value,axis):
+        if self.loading:return
+        selected=self.selected()
+        if not selected or selected[0].kind!='graphic':return
+        e=selected[0];source=self.renderer.pair(e.resource)[0]
+        self.remember();e.scale=value/(source.width if axis==0 else source.height);self.refresh()
     def selected(self):
         keys={i.data(Qt.ItemDataRole.UserRole) for i in self.elements.selectedItems()}
         return [e for e in self.title.elements if e.id in keys]
@@ -243,12 +258,15 @@ class TitleEditor(QDialog):
         selected=self.selected();e=selected[0] if selected else None
         for widget in (self.text,self.font,self.size,self.bold,self.italic,self.color,self.align):widget.setEnabled(e is not None and e.kind=='text')
         self.scale.setEnabled(e is not None and e.kind=='graphic')
+        self.graphic_width.setEnabled(e is not None and e.kind=='graphic');self.graphic_height.setEnabled(e is not None and e.kind=='graphic')
         for widget in (self.shadow,self.outline,self.opacity,self.offset,self.blur):widget.setEnabled(e is not None and e.kind=='text')
         if e:
             self.text.setPlainText(e.text);self.font.setCurrentFont(QFont(e.font));self.size.setValue(e.size);self.bold.setChecked(e.bold);self.italic.setChecked(e.italic)
             self.color.setText(e.color);self.scale.setValue(e.scale*100);self.depth.setValue(e.depth);self.shadow.setChecked(e.shadow)
             self.outline.setValue(e.outline);self.opacity.setValue(e.shadow_opacity*100);self.offset.setValue(e.shadow_offset);self.blur.setValue(e.shadow_blur)
             self.align.setCurrentIndex(max(0,self.align.findData(e.align)))
+            if e.kind=='graphic':
+                source=self.renderer.pair(e.resource)[0];self.graphic_width.setValue(source.width*e.scale);self.graphic_height.setValue(source.height*e.scale)
         self.loading=False;self.refresh(False)
     def fields_changed(self,*args):
         if self.loading:return
@@ -279,7 +297,10 @@ class TitleEditor(QDialog):
         if load:
             self.loading=True
             selected=self.selected()
-            if selected:self.scale.setValue(selected[0].scale*100);self.depth.setValue(selected[0].depth)
+            if selected:
+                e=selected[0];self.scale.setValue(e.scale*100);self.depth.setValue(e.depth)
+                if e.kind=='graphic':
+                    source=self.renderer.pair(e.resource)[0];self.graphic_width.setValue(source.width*e.scale);self.graphic_height.setValue(source.height*e.scale)
             self.loading=False
     def add_text(self):
         self.remember();e=Element(text=self.tr('Neuer Text','New text'));self.title.elements.append(e);self.reload_elements();self.select_element(e.id)

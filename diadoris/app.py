@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
     def tr(self,de,en=None):return de if self.language=='de' else en or de
     def action(self,menu,de,en,shortcut,callback):
         a=QAction(self.tr(de,en),self)
+        a.setAutoRepeat(False)
         if shortcut:a.setShortcut(QKeySequence(shortcut))
         a.triggered.connect(callback);menu.addAction(a);self.menu_actions.append(a);return a
     def build_ui(self):
@@ -244,6 +245,7 @@ class MainWindow(QMainWindow):
             self.position=self.project.starts()[self.rows[row][0]];self.request_preview()
     def double_click(self,row,col):
         if row>=len(self.rows):self.active.setCurrentIndex(self.group_for_column(col));self.add_files();return
+        if col in {4,5,7,8,10,11}:self.timings();return
         self.properties(field='duration' if col==1 else 'transition' if col==2 else None)
     def request_preview(self,*args):
         if not hasattr(self,'mode'):return
@@ -386,7 +388,10 @@ class MainWindow(QMainWindow):
         if track=='slides':menu.addAction(self.tr('Schwarzbild danach einfügen','Insert black image after'),self.add_black)
         if objects:
             menu.addSeparator();menu.addAction(self.tr('Eigenschaften …','Properties …'),self.properties)
-            menu.addAction(self.tr('Bilddauer und Übergang …','Duration and transition …') if track=='slides' else self.tr('Zeiten und Blenden …','Timing and fades …'),self.timings)
+            if track=='slides':
+                menu.addAction(self.tr('Bilddauer …','Display duration …'),lambda:self.properties(field='duration'))
+                menu.addAction(self.tr('Übergang zum nächsten Bild …','Transition to next image …'),lambda:self.properties(field='transition'))
+            else:menu.addAction(self.tr('Zeiten und Blenden …','Timing and fades …'),self.timings)
             menu.addAction(self.tr('Duplizieren','Duplicate'),self.duplicate);menu.addAction(self.tr('Entfernen','Remove'),self.remove)
             if track=='slides':menu.addAction(self.tr('Als Vorgabe für neue Bilder übernehmen','Use as defaults for new images'),self.use_defaults)
             if len(objects)==1 and objects[0].resource:

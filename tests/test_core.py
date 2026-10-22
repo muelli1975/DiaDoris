@@ -9,6 +9,7 @@ import threading
 import unittest
 import wave
 import zipfile
+from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 from PySide6.QtWidgets import QApplication
@@ -136,6 +137,18 @@ class ExportTests(unittest.TestCase):
             cancel=threading.Event();cancel.set()
             with self.assertRaises(Cancelled):export_project(p,out,ExportSettings(width=160,height=90,audio='none'),cancel)
             self.assertFalse(out.exists());self.assertFalse(list(root.glob('.diadoris-*')))
+    def test_lossless_rgb_handoff_to_original_bd_pipeline(self):
+        with tempfile.TemporaryDirectory() as temp:
+            p=Project(width=160,height=90,slides=[Slide(kind='black',duration=.1)],start_fade=0,end_fade=0)
+            seen=[]
+            def inspect(tools,plan,cancel,emit,log):
+                info=self.probe(plan.source);video=info['streams'][0]
+                self.assertEqual(video['pix_fmt'],'bgr0');self.assertEqual(video['color_space'],'gbr')
+                self.assertEqual(video['avg_frame_rate'],'24000/1001')
+                self.assertEqual(plan.options.target,'bd3d');seen.append(plan)
+            with patch('transcora.core.bd3d_export.BdTools.find',return_value=object()),patch('diadoris.export.execute',side_effect=inspect):
+                export_project(p,Path(temp)/'test.iso',ExportSettings(target='bd3d',container='iso',audio='none',bitrate=40))
+            self.assertEqual(len(seen),1)
 
 
 if __name__=='__main__':unittest.main()
