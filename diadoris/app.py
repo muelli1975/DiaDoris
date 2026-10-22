@@ -470,7 +470,7 @@ class MainWindow(QMainWindow):
         if modified:self.changed()
     def start_task(self,function,done,label):
         if self.task:return
-        self.stop();self.status.setText(label);self.progress.setValue(0);self.progress.show();self.cancel.show()
+        self.stop();self.task_label=label;self.status.setText(label);self.progress.setValue(0);self.progress.show();self.cancel.show()
         self.table.setEnabled(False);self.export_button.setEnabled(False);self.language_box.setEnabled(False)
         self.menuBar().setEnabled(False)
         for b in self.root.findChildren(QPushButton):
@@ -484,6 +484,7 @@ class MainWindow(QMainWindow):
         else:self.status.setText(error);QMessageBox.warning(self,'DiaDoris',error)
     def task_finished(self):
         old=self.task;self.task=None
+        if self.status.text()==self.task_label:self.status.setText(self.tr('Bereit','Ready'))
         self.progress.hide();self.cancel.hide();self.table.setEnabled(True);self.export_button.setEnabled(True);self.language_box.setEnabled(True);self.menuBar().setEnabled(True)
         for b in self.root.findChildren(QPushButton):b.setEnabled(True)
         if old:old.deleteLater()

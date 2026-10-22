@@ -22,6 +22,16 @@ def tr(de,en=None):return de
 
 
 class GuiTests(unittest.TestCase):
+    def test_finished_background_task_restores_ready_state(self):
+        window=MainWindow()
+        try:
+            results=[];window.start_task(lambda cancel,progress:42,results.append,'Working')
+            for _ in range(40):
+                QTest.qWait(25)
+                if window.task is None:break
+            self.assertEqual(results,[42]);self.assertIsNone(window.task)
+            self.assertEqual(window.status.text(),window.tr('Bereit','Ready'));self.assertTrue(window.table.isEnabled())
+        finally:window.dirty=False;window.close()
     def test_meter_calibration_is_dbfs(self):
         m=Meter();m.set_levels([.5,1.1])
         self.assertAlmostEqual(m.levels[0],-6.020599913,places=6)
