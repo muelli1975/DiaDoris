@@ -17,7 +17,9 @@ lokal und lädt beim Start keine Komponenten nach.
 `examples/Example.dido` enthält ein bearbeitbares Beispiel mit selbst erzeugten
 Stereo-Testgrafiken und einem leisen Testton. Eigene Dateien kommen zunächst in
 Spur 1. Normale Bilder beginnen als 2D; eindeutige `_sbs`-/`-lr`-/`-rl`-Namen sowie
-JPS/PNS als Full-SBS. **Quelllayout** und **L/R tauschen** in den Eigenschaften prüfen.
+JPS/PNS als Full-SBS. Ohne eindeutiges Kürzel gilt bei JPS/PNS wie in TransCora
+rechts zuerst. Die etablierten TransCora-Kürzel für Full-/Half-SBS/OU werden
+ebenfalls erkannt. **Quelllayout** und **L/R tauschen** in den Eigenschaften prüfen.
 
 Die Hauptspur bestimmt die Schaudauer. Übergänge zwischen Fotos liegen mittig
 auf dem rechnerischen Bildwechsel: 3 × 8 Sekunden bleiben insgesamt 24 Sekunden.

@@ -158,10 +158,16 @@ class Project:
 
     def add_resource(self, path, kind='image', layout=None):
         path = str(Path(path).resolve())
+        swap=Path(path).stem.lower().endswith('-rl')
         if layout is None:
             stem = Path(path).stem.lower()
-            layout = 'full_sbs' if Path(path).suffix.lower() in {'.jps', '.pns'} or stem.endswith(('_sbs', '-lr', '-rl')) else 'mono'
-        resource = Resource(path, kind=kind, layout=layout, swap=Path(path).stem.lower().endswith('-rl'))
+            from transcora.core.naming import filename_layout
+            hint=filename_layout(stem)
+            if hint and hint[0] in {'full_sbs','half_sbs','full_ou','half_ou'}:layout,swap=hint
+            elif stem.endswith('_sbs'):layout='full_sbs'
+            elif Path(path).suffix.lower() in {'.jps','.pns'}:layout,swap='full_sbs',True
+            else:layout='mono'
+        resource = Resource(path, kind=kind, layout=layout, swap=swap)
         self.resources.append(resource)
         return resource
 

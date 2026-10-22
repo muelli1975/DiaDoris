@@ -27,6 +27,11 @@ APP=QApplication.instance() or QApplication([])
 
 
 class ProjectTests(unittest.TestCase):
+    def test_import_markers_match_transcora_and_jps_order(self):
+        p=Project()
+        for name,layout,swap in [('photo.jps','full_sbs',True),('photo-lr.jps','full_sbs',False),('film-lrq.mp4','half_sbs',False),('film.3D.HTAB.mkv','half_ou',False),('photo_sbs.jpg','full_sbs',False)]:
+            resource=p.add_resource(name)
+            self.assertEqual((resource.layout,resource.swap),(layout,swap))
     def test_centered_transition_preserves_duration_and_endpoints(self):
         p=Project(width=160,height=90,slides=[Slide(kind='black',duration=8) for _ in range(3)])
         self.assertEqual(p.duration,24)

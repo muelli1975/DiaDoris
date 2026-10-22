@@ -19,7 +19,10 @@ does not download components or require an account.
 Open `examples/Example.dido` for an editable demonstration made from original
 calibration graphics and a quiet calibration tone. Add your own files to Track 1;
 normal images default to 2D, while explicit `_sbs`, `-lr`, `-rl`, JPS and PNS
-sources default to Full-SBS. Check **Source layout** and **Swap L/R** in Properties.
+sources default to Full-SBS. Unmarked JPS/PNS files assume right-eye-first, as in
+TransCora; an explicit filename marker takes precedence. Established TransCora
+Full/Half SBS/OU filename markers are also recognized. Check **Source layout**
+and **Swap L/R** in Properties.
 
 Track 1 determines the show duration. Photo transitions are centered on nominal
 image boundaries: three eight-second images remain 24 seconds, including
