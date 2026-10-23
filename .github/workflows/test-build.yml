@@ -22,7 +22,7 @@ jobs:
           python-version: '3.12'
       - name: Install test packages from the official Ubuntu mirror
         run: |
-          for apt_sources_file in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+          for apt_sources_file in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/apt-mirrors.txt; do
             if [ -f "$apt_sources_file" ]; then
               sudo sed -i -e 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' -e 's|http://archive.ubuntu.com|https://archive.ubuntu.com|g' "$apt_sources_file"
             fi
