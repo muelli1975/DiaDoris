@@ -7,6 +7,7 @@ from fractions import Fraction
 from PIL import Image
 from transcora.core.toolchain import Toolchain,process_options
 from transcora.core.engine import stop_process
+from transcora.core.sdr_color import rgb_input
 
 VIDEO_EXTENSIONS={'.mp4','.mkv','.mov','.avi','.m4v','.mts','.m2ts','.webm','.wmv','.mpg','.mpeg'}
 
@@ -72,14 +73,13 @@ class VideoReader:
         mode='increase' if self.fit=='crop' else 'decrease'
         size=f'scale={dw}:{dh},setsar=1,scale={w}:{h}:force_original_aspect_ratio={mode}:flags=lanczos,'
         size+=f'crop={w}:{h}' if self.fit=='crop' else f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black'
-        # Standard SDR decode to a shared sRGB representation before compositing.
+        # Decode ordinary SDR with the same tone-value policy as photo/video export.
         transfer=info.get('transfer','bt709')
         transfer=transfer if transfer in {'bt709','iec61966-2-1','smpte170m','gamma22','gamma28','bt2020-10','bt2020-12'} else 'bt709'
         matrix=info.get('matrix','bt709');matrix=matrix if matrix in {'bt709','smpte170m','bt470bg','bt2020nc','gbr'} else 'bt709'
         prim=info.get('primaries','bt709');prim=prim if prim in {'bt709','smpte170m','bt470bg','bt2020'} else 'bt709'
-        color=(f'zscale=matrixin={matrix}:transferin={transfer}:primariesin={prim}:'
-               f'rangein={"full" if info.get("range")=="pc" else "limited"}:'
-               'matrix=gbr:transfer=iec61966-2-1:primaries=bt709:range=full,format=gbrp16')
+        color = rgb_input(dict(matrix=matrix, transfer=transfer, primaries=prim,
+                               range=info.get('range', 'tv')))
         xy=(ew,0) if layout.endswith('sbs') else (0,eh) if layout.endswith('ou') else (0,0)
         graph=f'[0:v:0]fps={self.fps},{color},split[a][b];[a]crop={ew}:{eh}:0:0,{size}[l];[b]crop={ew}:{eh}:{xy[0]}:{xy[1]},{size}[r];'
         graph+=('[r][l]' if r.swap else '[l][r]')+'hstack,format=rgb24[out]'
