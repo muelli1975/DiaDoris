@@ -30,6 +30,7 @@ from .video import VIDEO_EXTENSIONS,inspect_video
 from .audio import audio_duration,mix_audio,pcm16,RATE
 from .export import export_project
 from .dialogs import PropertiesDialog,ProjectDialog,ExportDialog
+from .titlebar import install_qt_titlebars
 from .titles import TitleEditor
 from .widgets import STYLE,Preview,Meter,TrackTable,TrackHeader
 
@@ -601,6 +602,7 @@ class MainWindow(QMainWindow):
 
 def main():
     app=QApplication(sys.argv);app.setOrganizationName('StereoTools');app.setApplicationName('DiaDoris');app.setStyle('Fusion')
+    install_qt_titlebars(app)
     if '--self-test' in sys.argv:
         report=Path(sys.argv[sys.argv.index('--self-test')+1])
         try:
