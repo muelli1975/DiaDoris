@@ -17,7 +17,7 @@ Windows Blu-ray 3D tools are included. Processing is local; the application
 does not download components or require an account.
 
 Open `examples/Example.dido` for an editable demonstration made from original
-calibration graphics and a quiet calibration tone. Add your own files to Track 1;
+calibration graphics and a quiet calibration tone. Add media files to Track 1;
 normal images default to 2D, while explicit `_sbs`, `-lr`, `-rl`, JPS and PNS
 sources default to Full-SBS. Unmarked JPS/PNS files assume right-eye-first, as in
 TransCora; an explicit filename marker takes precedence. Established TransCora
